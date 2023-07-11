@@ -1,7 +1,8 @@
 
 
 class Task:
-    def __init__(self, period, execution_time, priority=0) -> None:
+    def __init__(self, number, period, execution_time, priority=0) -> None:
+        self.number = number
         self.period = period
         self.next_start = period
         self.next_deadline = period
@@ -12,7 +13,7 @@ class Task:
         self.execution_chart = []
 
     def __repr__(self) -> str:
-        return f"Task(period={self.period}, execution_time={self.execution_time}" + (f", priority={self.priority})" if self.priority > 0 else "")
+        return f"Task{self.number}"
     
     def execute(self, start_time, execution_time: int) -> bool:
         self.remaining_time -= execution_time
