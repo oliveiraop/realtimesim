@@ -20,7 +20,7 @@ class RMSim:
         self.executing_task = self.waiting_tasks.pop(0)
         # Teste para saber se existem tarefas dormindo
         if (len(self.sleeping_tasks) > 0):
-            while self.sleeping_tasks[0].next_start <= self.executing_task.remaining_time:
+            while ((self.sleeping_tasks[0].next_start) <= (self.time + self.executing_task.remaining_time)):
                 if self.sleeping_tasks[0].priority > self.executing_task.priority:
                     print(f'{self.executing_task} executed for {self.sleeping_tasks[0].next_start - self.time} time units')
                     self.executing_task.execute(self.time, self.sleeping_tasks[0].next_start - self.time)

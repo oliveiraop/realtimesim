@@ -4,10 +4,10 @@ class Task:
     def __init__(self, number, period, execution_time, priority=0) -> None:
         self.number = number
         self.period = period
-        self.next_start = period
-        self.next_deadline = period
-        self.execution_time = execution_time
-        self.remaining_time = execution_time
+        self.next_start : int = period
+        self.next_deadline : int = period
+        self.execution_time : int = execution_time
+        self.remaining_time : int = execution_time
         self.executed = False
         self.priority = priority
         self.execution_chart = []
