@@ -1,6 +1,8 @@
 import PySimpleGUI as sg
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import gantt
+from rm_sim import RMSim
+from common import Task
 
 
 def create_layout(tasks_length):
@@ -81,8 +83,8 @@ def create_row(row_counter):
     return row
 
 
-def plot_graph(window, values, deadlines):
-    fig = gantt.plot_grant(values, deadlines)
+def plot_graph(window, values, deadlines, periods):
+    fig = gantt.plot_grant(values, deadlines, periods)
 
     # clear the old plot
     if len(window["-CANVAS-"].TKCanvas.children) > 0:
@@ -128,17 +130,22 @@ def start():
 
         if event == "-RM-":
             print("RM")
-            tasks = get_task_values(values, row_counter)
-            print(tasks)
-            plot_graph(
-                window,
-                [
-                    [[10, 10]],
-                    [[5, 5], [20, 5], [35, 5], [50, 5]],
-                    [[0, 5], [15, 5], [30, 5], [45, 5]],
-                ],
-                [],
-            )
+            task_values = get_task_values(values, row_counter)
+
+            tasks: list[Task] = []
+            periods = []
+            for idx, task in enumerate(task_values):
+                tasks.append(Task(idx + 1, task[0], task[1], task[2]))
+                periods.append(task[0])
+            sim = RMSim(tasks)
+            sim.simulate(50)
+
+            tasks_to_plot = []
+            tasks_endings = []
+            for task in tasks:
+                tasks_to_plot.append(task.execution_chart)
+                tasks_endings.append(task.execution_endings)
+            plot_graph(window, tasks_to_plot, tasks_endings, periods)
 
         if event == "-EDF-":
             print("EDF")

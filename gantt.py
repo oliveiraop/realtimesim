@@ -14,7 +14,7 @@ colors = [
 ]
 
 
-def plot_grant(values, deadlines):
+def plot_grant(values, deadlines, periods):
     fig, gnt = plt.subplots()
     gnt.set_ylabel("Processador")
     labels = []
@@ -32,7 +32,7 @@ def plot_grant(values, deadlines):
         gnt.broken_barh(
             tuple_list,
             ((idx + 1) * 10, 10),
-            facecolors=(f"tab:{colors[idx]}" if idx < len(colors) else "tab:blue"),
+            facecolors=(f"tab:{colors[idx%len(colors)]}"),
             edgecolors="black",
         )
 
@@ -41,12 +41,35 @@ def plot_grant(values, deadlines):
             gnt.vlines(
                 deadline,
                 (idx + 1) * 10,
-                (idx + 1) * 10 + 10,
-                colors=colors[idx2],
+                (idx + 1) * 10 + 12,
+                colors=colors[idx2 % len(colors)],
                 linestyles="solid",
             )
+
+    for idx, deadline in enumerate(periods):
+        i = 0
+        while deadline * i < 50:
+            print(deadline * i, (idx + 1) * 10, (idx + 1) * 10 + 12)
+            gnt.vlines(
+                deadline * i,
+                (idx + 1) * 10,
+                (idx + 1) * 10 + 12,
+                color=colors[idx % len(colors)],
+                linestyle="dashed",
+            )
+            i += 1
+
     plt.savefig("gantt1.png")
     return fig
+
+
+def plot_deadlines(periods):
+    for idx, deadline in enumerate(periods):
+        i = 0
+        while deadline * i < 50:
+            print(deadline * i, deadline)
+            plt.axvline(deadline * i, 0, 50, color="white", linestyle="dashed")
+            i += 1
 
 
 plot_grant(
@@ -68,4 +91,5 @@ plot_grant(
         ],
     ],
     [],
+    [3, 4, 5],
 )
