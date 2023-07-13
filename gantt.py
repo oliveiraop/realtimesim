@@ -13,17 +13,17 @@ colors = [
     "cyan",
 ]
 
+
 def plot_grant(values, deadlines):
     fig, gnt = plt.subplots()
-    gnt.set_ylim(0, 50)
-    gnt.set_xlim(0, 160)
-    # gnt.set_xlabel("")
     gnt.set_ylabel("Processador")
-    # gnt.set_yticks([15, 25, 35])
     labels = []
+    yticks = []
     for idx in range(len(values)):
         labels.append(f"tarefa {idx + 1}")
+        yticks.append((idx + 1) * 10 + 5)
 
+    gnt.set_yticks(yticks)
     gnt.set_yticklabels(labels)
     gnt.grid(True)
 
@@ -46,17 +46,26 @@ def plot_grant(values, deadlines):
                 linestyles="solid",
             )
     plt.savefig("gantt1.png")
+    return fig
 
 
 plot_grant(
     [
-        [[10, 90]],
-        [[100, 10], [160, 10]],
-        [[110, 50]],
+        [[9, 1], [12, 3], [24, 1], [27, 3], [39, 1], [42, 1]],
+        [[2, 3], [7, 2], [17, 3], [22, 2], [32, 3], [37, 2], [47, 3]],
+        [
+            [0, 2],
+            [5, 2],
+            [10, 2],
+            [15, 2],
+            [20, 2],
+            [25, 2],
+            [30, 2],
+            [35, 2],
+            [40, 2],
+            [45, 2],
+            [50, 2],
+        ],
     ],
-    [
-        [20, 30, 40, 50, 60, 70, 80, 90, 10],
-        [105, 165],
-        [120, 130, 140, 150, 160],
-    ],
+    [],
 )
