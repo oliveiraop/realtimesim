@@ -17,5 +17,5 @@ if __name__ == '__main__':
         execution_charts.append(task.execution_chart)
         print(task.execution_chart)
 
-    fig = gantt.plot_grant(execution_charts, [])
+    fig = gantt.plot_grant(execution_charts, [], [])
     plt.savefig("gantt1.png")
