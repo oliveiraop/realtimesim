@@ -44,11 +44,19 @@ class RMSim:
     # verifica se alguma task deve ser acordada
     def check_interruption(self) -> bool:
         interrupted = False
-        for task in self.sleeping_tasks:
-            if task.next_start < (self.time + self.executing_task.remaining_time):
-                interrupted = True
-                break
+        if self.sleeping_tasks[0].next_start < (self.time + self.executing_task.remaining_time):
+            interrupted = True
         return interrupted
+    
+    def waiting_insort(self) -> None:
+        bisect.insort(
+                    self.waiting_tasks, self.executing_task, key=self.insort_method
+                )
+        
+    def sleep_insort(self) -> None:
+        bisect.insort(
+                    self.sleeping_tasks, self.executing_task, key=self.sleep_insort_method
+                )
 
     def execute_task(self):
         # Inserção da próxima tarefa como executando
@@ -71,9 +79,7 @@ class RMSim:
                     self.wake_up_task()
                     return
                 self.wake_up_task()
-                bisect.insort(
-                    self.waiting_tasks, self.executing_task, key=self.sleep_insort_method
-                )
+                self.waiting_insort()
                 return
             else:
                 self.wake_up_task()
@@ -84,25 +90,16 @@ class RMSim:
         )
         executed = self.executing_task.remaining_time
         self.executing_task.execute(self.time, self.executing_task.remaining_time)
-        bisect.insort(self.sleeping_tasks, self.executing_task, key=self.sleep_insort_method)
+        self.sleep_insort()
         self.time += executed
         self.executing_task = None
 
     def check_priority(self) -> bool:
-        for task in self.sleeping_tasks:
-            if task.next_start < (self.time + self.executing_task.remaining_time):
-                if task.priority > self.executing_task.priority:
-                    return True
+        if self.sleeping_tasks[0].priority > self.executing_task.priority:
+            return True
         return False
 
     def wake_up_task(self) -> None:
-        task_to_wake_up, idx = self.get_first_task_to_wake_up()
-        if task_to_wake_up is not None:
-            task_to_wake_up.start_task()
-            bisect.insort(
-                self.waiting_tasks, self.sleeping_tasks.pop(idx), key=self.insort_method
-            )
-            return
         self.sleeping_tasks[0].start_task()
         bisect.insort(
             self.waiting_tasks, self.sleeping_tasks.pop(0), key=self.insort_method
@@ -117,6 +114,7 @@ class RMSim:
             print(f"Waiting tasks: {self.waiting_tasks}")
             print(f"Sleeping tasks: {self.sleeping_tasks}")
             print(f"Time: {self.time}")
+            # verifica se não existe tarefas esperando, se não, acorda as que estão dormindo
             if len(self.waiting_tasks) == 0 and len(self.sleeping_tasks) > 0:
                 self.time = self.sleeping_tasks[0].next_start
                 while (len(self.sleeping_tasks) > 0) and self.sleeping_tasks[
