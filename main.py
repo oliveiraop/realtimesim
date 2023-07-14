@@ -1,7 +1,7 @@
 import PySimpleGUI as sg
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import gantt
-from rm_sim import RMSim
+from rm_sim import RMSim, EDFSim
 from common import Task
 
 
@@ -148,9 +148,23 @@ def start():
             plot_graph(window, tasks_to_plot, tasks_endings, periods)
 
         if event == "-EDF-":
-            print("EDF")
-            tasks = get_task_values(values, row_counter)
-            print(tasks)
+            print("RM")
+            task_values = get_task_values(values, row_counter)
+
+            tasks: list[Task] = []
+            periods = []
+            for idx, task in enumerate(task_values):
+                tasks.append(Task(idx + 1, task[0], task[1], task[2]))
+                periods.append(task[0])
+            sim = EDFSim(tasks)
+            sim.simulate(50)
+
+            tasks_to_plot = []
+            tasks_endings = []
+            for task in tasks:
+                tasks_to_plot.append(task.execution_chart)
+                tasks_endings.append(task.execution_endings)
+            plot_graph(window, tasks_to_plot, tasks_endings, periods)
 
 
 if __name__ == "__main__":
