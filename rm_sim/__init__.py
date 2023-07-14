@@ -15,6 +15,7 @@ class RMSim:
         self.time = 0
         self.sim_end = 0
         self.insort_method = lambda x: -1 * x.priority
+        self.sleep_insort_method = lambda x: x.next_start
 
     def is_schedulable(self) -> bool:
         U = 0
@@ -71,7 +72,7 @@ class RMSim:
                     return
                 self.wake_up_task()
                 bisect.insort(
-                    self.waiting_tasks, self.executing_task, key=self.insort_method
+                    self.waiting_tasks, self.executing_task, key=self.sleep_insort_method
                 )
                 return
             else:
@@ -83,18 +84,16 @@ class RMSim:
         )
         executed = self.executing_task.remaining_time
         self.executing_task.execute(self.time, self.executing_task.remaining_time)
-        bisect.insort(self.sleeping_tasks, self.executing_task, key=self.insort_method)
+        bisect.insort(self.sleeping_tasks, self.executing_task, key=self.sleep_insort_method)
         self.time += executed
         self.executing_task = None
 
     def check_priority(self) -> bool:
         for task in self.sleeping_tasks:
             if task.next_start < (self.time + self.executing_task.remaining_time):
-                # return (True if task.priority > self.executing_task.priority else False)
                 if task.priority > self.executing_task.priority:
                     return True
         return False
-        return (True if  self.sleeping_tasks[0].priority > self.executing_task.priority else False)
 
     def wake_up_task(self) -> None:
         task_to_wake_up, idx = self.get_first_task_to_wake_up()
