@@ -7,15 +7,16 @@ class RMSim:
     def __init__(self, tasks: list[Task]) -> None:
         self.tasks: list[Task] = tasks
         self.waiting_tasks: list[Task] = []
+        self.insort_method = lambda x: -1 * x.priority
+        self.sleep_insort_method = lambda x: x.next_start
         for task in tasks:
-            bisect.insort(self.waiting_tasks, task, key=lambda x: -1 * x.priority)
+            bisect.insort(self.waiting_tasks, task, key=self.insort_method)
         self.sleeping_tasks: list[Task] = []
         self.executing_task: Task = None
         self.idle_time_chart = []
         self.time = 0
         self.sim_end = 0
-        self.insort_method = lambda x: -1 * x.priority
-        self.sleep_insort_method = lambda x: x.next_start
+        
 
     def is_schedulable(self) -> bool:
         U = 0
@@ -29,17 +30,6 @@ class RMSim:
             return True
         return None
 
-    def get_task_to_interrupt(self) -> Task:
-        for task in self.sleeping_tasks:
-            if task.next_start < (self.time + self.executing_task.remaining_time):
-                return task
-        return None
-
-    def get_first_task_to_wake_up(self) -> Union[Task, int]:
-        for idx, task in enumerate(self.sleeping_tasks):
-            if task.next_start == self.time:
-                return task, idx
-        return [None, None]
 
     # verifica se alguma task deve ser acordada
     def check_interruption(self) -> bool:
@@ -48,7 +38,7 @@ class RMSim:
             interrupted = True
         return interrupted
     
-    def waiting_insort(self) -> None:
+    def executing_waiting_insort(self) -> None:
         bisect.insort(
                     self.waiting_tasks, self.executing_task, key=self.insort_method
                 )
@@ -66,22 +56,19 @@ class RMSim:
         # Teste para saber se existem tarefas dormindo
         while (len(self.sleeping_tasks) > 0) and (self.check_interruption()):
             if self.check_priority():
-                task_to_interrupt = self.get_task_to_interrupt()
+                # Execução parcial da tarefa com interrupção
+                task_to_interrupt = self.sleeping_tasks[0]
                 executed = task_to_interrupt.next_start - self.time
                 print(
                     f"{self.executing_task} executed for {executed} time units remaining: {self.executing_task.remaining_time - executed}"
                 )
                 self.executing_task.execute(self.time, executed)
                 self.time += executed
-                if self.executing_task.executed:
-                    self.sleeping_tasks.append(self.executing_task)
-                    self.executing_task = None
-                    self.wake_up_task()
-                    return
                 self.wake_up_task()
-                self.waiting_insort()
+                self.executing_waiting_insort()
                 return
             else:
+                # Acordar tarefas que iniciam antes do fim da tarefa em execução e tem prioridade menor
                 self.wake_up_task()
 
         # Execução da tarefa sem interrupção
@@ -104,6 +91,14 @@ class RMSim:
         bisect.insort(
             self.waiting_tasks, self.sleeping_tasks.pop(0), key=self.insort_method
         )
+        # Evitar que uma tarefa que seja iniciada no mesmo instante não seja acordada
+        while (len(self.sleeping_tasks) > 0) and (
+            self.sleeping_tasks[0].next_start <= self.time
+        ):
+            self.sleeping_tasks[0].start_task()
+            bisect.insort(
+                self.waiting_tasks, self.sleeping_tasks.pop(0), key=self.insort_method
+            )
 
     def insert_idle_time(self, time, idle_time):
         self.idle_time_chart.append([time, idle_time])
@@ -134,6 +129,7 @@ class EDFSim:
         self.tasks: list[Task] = tasks
         self.waiting_tasks: list[Task] = []
         self.insort_method = lambda x: x.next_deadline
+        self.sleep_insort_method = lambda x: x.next_start
         for task in tasks:
             bisect.insort(self.waiting_tasks, task, key=self.insort_method)
         self.sleeping_tasks: list[Task] = []
@@ -149,54 +145,67 @@ class EDFSim:
             else False
         )
 
-    def execute_task(self):
-        # Inserção da próxima tarefa como executando
-
-        self.executing_task = self.waiting_tasks.pop(0)
-        # Teste para saber se existem tarefas dormindo
-        while (len(self.sleeping_tasks) > 0) and (
-            (self.sleeping_tasks[0].next_start)
-            < (self.time + self.executing_task.remaining_time)
-        ):
-            if self.check_priority():
-                executed = self.sleeping_tasks[0].next_start - self.time
-                print(
-                    f"{self.executing_task} executed for {executed} time units remaining: {self.executing_task.remaining_time - executed} with deadline {self.executing_task.next_deadline}"
-                )
-                self.executing_task.execute(
-                    self.time, self.sleeping_tasks[0].next_start - self.time
-                )
-                self.time += self.sleeping_tasks[0].next_start - self.time
-                self.wake_up_task()
-                bisect.insort(
+    def executing_waiting_insort(self) -> None:
+        bisect.insort(
                     self.waiting_tasks, self.executing_task, key=self.insort_method
                 )
+        
+    def sleep_insort(self) -> None:
+        bisect.insort(
+                    self.sleeping_tasks, self.executing_task, key=self.sleep_insort_method
+                )
+
+    def execute_task(self):
+        # Inserção da próxima tarefa como executando
+        self.executing_task = self.waiting_tasks.pop(0)
+        print(f"Task{self.executing_task.number} is executing")
+
+        # Teste para saber se existem tarefas dormindo
+        while (len(self.sleeping_tasks) > 0) and (self.check_interruption()):
+            if self.check_priority():
+                # Execução parcial da tarefa com interrupção
+                task_to_interrupt = self.sleeping_tasks[0]
+                executed = task_to_interrupt.next_start - self.time
+                print(
+                    f"{self.executing_task} executed for {executed} time units remaining: {self.executing_task.remaining_time - executed}"
+                )
+                self.executing_task.execute(self.time, executed)
+                self.time += executed
+                self.wake_up_task()
+                self.executing_waiting_insort()
                 return
             else:
+                # Acordar tarefas que iniciam antes do fim da tarefa em execução e tem prioridade menor
                 self.wake_up_task()
+
+        # Execução da tarefa sem interrupção
         print(
             f"{self.executing_task} executed for {self.executing_task.remaining_time} time units"
         )
         executed = self.executing_task.remaining_time
         self.executing_task.execute(self.time, self.executing_task.remaining_time)
-        bisect.insort(self.sleeping_tasks, self.executing_task, key=self.insort_method)
+        self.sleep_insort()
         self.time += executed
         self.executing_task = None
 
     def check_priority(self) -> bool:
         if self.sleeping_tasks[0].next_deadline < self.executing_task.next_deadline:
-            print(
-                f"{self.sleeping_tasks[0]} has deadline {self.sleeping_tasks[0].next_deadline} and {self.executing_task} has deadline {self.executing_task.next_deadline}"
-            )
             return True
-        else:
-            return False
+        return False
 
     def wake_up_task(self) -> None:
         self.sleeping_tasks[0].start_task()
         bisect.insort(
             self.waiting_tasks, self.sleeping_tasks.pop(0), key=self.insort_method
         )
+        # Evitar que uma tarefa que seja iniciada no mesmo instante não seja acordada
+        while (len(self.sleeping_tasks) > 0) and (
+            self.sleeping_tasks[0].next_start <= self.time
+        ):
+            self.sleeping_tasks[0].start_task()
+            bisect.insort(
+                self.waiting_tasks, self.sleeping_tasks.pop(0), key=self.insort_method
+            )
 
     def insert_idle_time(self, time, idle_time):
         self.idle_time_chart.append([time, idle_time])
