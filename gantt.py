@@ -14,14 +14,14 @@ colors = [
 ]
 
 
-def plot_grant(values, deadlines, periods):
+def plot_grant(values, deadlines, periods, test_period=24):
     fig, gnt = plt.subplots()
     gnt.set_ylabel("Processador")
     labels = []
     yticks = []
     for idx in range(len(values)):
         labels.append(f"tarefa {idx + 1}")
-        yticks.append((idx + 1) * 10 + 5)
+        yticks.append((idx + 1) * 5 + 5)
 
     gnt.set_yticks(yticks)
     gnt.set_yticklabels(labels)
@@ -31,14 +31,14 @@ def plot_grant(values, deadlines, periods):
         tuple_list = tuple(i for i in value)
         gnt.broken_barh(
             tuple_list,
-            ((idx + 1) * 10, 10),
+            ((idx + 1) * 5, 5),
             facecolors=(f"tab:{colors[idx%len(colors)]}"),
-            edgecolors="black",
+            edgecolors="white",
         )
         gnt.hlines(
-            (idx + 1) * 10,
+            (idx + 1) * 5,
             0,
-            24,
+            test_period,
             colors="black",
             linestyles="solid",
             linewidth=1,
@@ -48,56 +48,23 @@ def plot_grant(values, deadlines, periods):
         for idx2, deadline in enumerate(value):
             gnt.vlines(
                 deadline,
-                (idx + 1) * 10,
-                (idx + 1) * 10 + 12,
-                colors=colors[idx % len(colors)],
+                (idx + 1) * 5,
+                (idx + 1) * 5 + 7,
+                colors="black",
                 linestyles="solid",
             )
 
     for idx, deadline in enumerate(periods):
         i = 1
-        while deadline * i < 24:
-            print(deadline * i, (idx + 1) * 10, (idx + 1) * 10 + 12)
+        while deadline * i < test_period:
             gnt.vlines(
                 deadline * i,
-                (idx + 1) * 10,
-                (idx + 1) * 10 + 12,
-                color=colors[idx % len(colors)],
+                (idx + 1) * 5,
+                (idx + 1) * 5 + 7,
+                color="red",
                 linestyle="dashed",
             )
             i += 1
-
+    plt.figure(figsize=(800/96, 800/96), dpi=96)
     plt.savefig("gantt1.png")
     return fig
-
-
-def plot_deadlines(periods):
-    for idx, deadline in enumerate(periods):
-        i = 0
-        while deadline * i < 24:
-            print(deadline * i, deadline)
-            plt.axvline(deadline * i, 0, 24, color="green", linestyle="dashed")
-            i += 1
-
-
-plot_grant(
-    [
-        [[9, 1], [12, 3], [24, 1], [27, 3], [39, 1], [42, 1]],
-        [[2, 3], [7, 2], [17, 3], [22, 2], [32, 3], [37, 2], [47, 3]],
-        [
-            [0, 2],
-            [5, 2],
-            [10, 2],
-            [15, 2],
-            [20, 2],
-            [25, 2],
-            [30, 2],
-            [35, 2],
-            [40, 2],
-            [45, 2],
-            [20, 2],
-        ],
-    ],
-    [],
-    [3, 4, 5],
-)

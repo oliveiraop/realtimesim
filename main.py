@@ -5,7 +5,7 @@ from rm_sim import RMSim, EDFSim
 from common import Task
 
 
-def create_layout(tasks_length):
+def create_layout():
     setup_colum = [
         [
             sg.Button("Adicionar tarefa", key="-ADD-", size=(10, 2)),
@@ -17,6 +17,17 @@ def create_layout(tasks_length):
             sg.Button("EDF", key="-EDF-", size=(10, 2)),
         ],
         [
+            sg.Text("Período de teste"),
+            sg.Input(
+                "",
+                enable_events=True,
+                key="-TEST_PERIOD-",
+                expand_x=True,
+                justification="left",
+                size=(9, 1),
+            ),
+        ],
+        [
             sg.Text("Tarefa", size=(10, 1)),
             sg.Text("Período", size=(10, 1)),
             sg.Text("Duração", size=(10, 1)),
@@ -26,15 +37,15 @@ def create_layout(tasks_length):
     ]
 
     graph_column = [
-        [sg.Text("Gráfico:")],
-        [sg.Canvas(key="-CANVAS-")],
+        [sg.Text("Gráfico:"), sg.Text(size=(60, 1), key="-TOUT-")],
+        [sg.Canvas(key="-CANVAS-"), ],
     ]
 
     layout = [
         [
             sg.Column(setup_colum, key="-COL1-", vertical_alignment="top"),
             sg.VSeperator(),
-            sg.Column(graph_column, vertical_alignment="top", size=(800, 600)),
+            sg.Column(graph_column, vertical_alignment="top", size=(1200, 600)),
         ]
     ]
     return layout
@@ -83,8 +94,8 @@ def create_row(row_counter):
     return row
 
 
-def plot_graph(window, values, deadlines, periods):
-    fig = gantt.plot_grant(values, deadlines, periods)
+def plot_graph(window, values, deadlines, periods, test_period):
+    fig = gantt.plot_grant(values, deadlines, periods, test_period)
 
     # clear the old plot
     if len(window["-CANVAS-"].TKCanvas.children) > 0:
@@ -113,9 +124,9 @@ def get_task_values(values, row_counter):
 
 
 def start():
-    layout = create_layout(1)
+    layout = create_layout()
     window = sg.Window(
-        "SIMULADOR DE PROCESSOS", layout, size=(1000, 600), resizable=True
+        "SIMULADOR DE PROCESSOS", layout, size=(1200, 600), resizable=True
     )
 
     row_counter = 1
@@ -138,14 +149,23 @@ def start():
                 tasks.append(Task(idx + 1, task[0], task[1], task[2]))
                 periods.append(task[0])
             sim = RMSim(tasks)
-            sim.simulate(24)
+            test_period = int(values["-TEST_PERIOD-"])
+            sim.simulate(test_period)
 
             tasks_to_plot = []
             tasks_endings = []
             for task in tasks:
                 tasks_to_plot.append(task.execution_chart)
                 tasks_endings.append(task.execution_endings)
-            plot_graph(window, tasks_to_plot, tasks_endings, periods)
+            plot_graph(window, tasks_to_plot, tasks_endings, periods, test_period)
+            is_schedulable = sim.is_schedulable()
+            print(is_schedulable)
+            if is_schedulable:
+                window['-TOUT-'].update("O conjunto de tarefas é escalonável por RM")
+            elif is_schedulable is None:
+                window['-TOUT-'].update("Não é possível determinar se o conjunto de tarefas é escalonável por RM")
+            else:
+                window['-TOUT-'].update("O conjunto de tarefas não é escalonável por RM")
 
         if event == "-EDF-":
             print("RM")
@@ -157,14 +177,17 @@ def start():
                 tasks.append(Task(idx + 1, task[0], task[1], task[2]))
                 periods.append(task[0])
             sim = EDFSim(tasks)
-            sim.simulate(24)
+            test_period = int(values["-TEST_PERIOD-"])
+            sim.simulate(test_period)
 
             tasks_to_plot = []
             tasks_endings = []
             for task in tasks:
                 tasks_to_plot.append(task.execution_chart)
                 tasks_endings.append(task.execution_endings)
-            plot_graph(window, tasks_to_plot, tasks_endings, periods)
+            plot_graph(window, tasks_to_plot, tasks_endings, periods, test_period)
+            is_schedulable = sim.is_schedulable()
+            window['-TOUT-'].update("O conjunto de tarefas é escalonável por EDF" if is_schedulable else "O conjunto de tarefas não é escalonável por EDF")
 
 
 if __name__ == "__main__":
