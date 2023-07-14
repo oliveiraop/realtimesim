@@ -25,7 +25,8 @@ class Task:
             self.next_deadline += self.period
             self.executed = True
             self.execution_endings.append(start_time + execution_time)
-        self.execution_gantt(start_time, execution_time)
+        if (execution_time > 0):
+            self.execution_gantt(start_time, execution_time)
     
     def start_task(self) -> None:
         print(f"Wake up task{self.number}, next deadline is {self.next_deadline}")

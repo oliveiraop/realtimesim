@@ -6,11 +6,11 @@ import matplotlib.pyplot as plt
 
 if __name__ == '__main__':
     tasks : list[Task] = []
-    tasks.append(Task(1, 20, 10, 3))
-    tasks.append(Task(2, 15, 5, 4))
-    tasks.append(Task(3, 5, 2, 5))
+    tasks.append(Task(1, 9, 2, 1))
+    tasks.append(Task(2, 5, 2, 2))
+    tasks.append(Task(3, 3, 1, 3))
     sim = RMSim(tasks)  
-    sim.simulate(50)
+    sim.simulate(24)
 
     execution_charts = []
     for task in tasks:

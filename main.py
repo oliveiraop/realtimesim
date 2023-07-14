@@ -138,7 +138,7 @@ def start():
                 tasks.append(Task(idx + 1, task[0], task[1], task[2]))
                 periods.append(task[0])
             sim = RMSim(tasks)
-            sim.simulate(50)
+            sim.simulate(24)
 
             tasks_to_plot = []
             tasks_endings = []
@@ -157,7 +157,7 @@ def start():
                 tasks.append(Task(idx + 1, task[0], task[1], task[2]))
                 periods.append(task[0])
             sim = EDFSim(tasks)
-            sim.simulate(50)
+            sim.simulate(24)
 
             tasks_to_plot = []
             tasks_endings = []

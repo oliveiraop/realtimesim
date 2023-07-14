@@ -1,5 +1,6 @@
 from common import Task
 import bisect
+from typing import List, Union
 
 
 class RMSim:
@@ -16,17 +17,46 @@ class RMSim:
 
         self.insort_method = lambda x: -1 * x.priority
 
+    def get_task_to_interrupt(self) -> Task:
+        for task in self.sleeping_tasks:
+            if task.next_start < (self.time + self.executing_task.remaining_time):
+                return task
+        return None
+    
+    def get_first_task_to_wake_up(self) -> Union[Task, int]:
+        for idx, task in enumerate(self.sleeping_tasks):
+            if task.next_start == self.time:
+                return task, idx
+        return [None, None]
+
+    # verifica se alguma task deve ser acordada
+    def check_interruption(self) -> bool:
+        interrupted = False
+        for task in self.sleeping_tasks:
+            if task.next_start < (self.time + self.executing_task.remaining_time):
+                interrupted = True
+                break
+        return interrupted
+
+            
     def execute_task(self):
         # Inserção da próxima tarefa como executando
-        
         self.executing_task = self.waiting_tasks.pop(0)
+        
         # Teste para saber se existem tarefas dormindo
-        while (len(self.sleeping_tasks) > 0) and ((self.sleeping_tasks[0].next_start) <= (self.time + self.executing_task.remaining_time)):
+        print(f"Task{self.executing_task.number} is executing")
+        while (len(self.sleeping_tasks) > 0) and (self.check_interruption()):
             if self.check_priority():
-                executed = self.sleeping_tasks[0].next_start - self.time
+                task_to_interrupt = self.get_task_to_interrupt()
+                executed = task_to_interrupt.next_start - self.time
                 print(f'{self.executing_task} executed for {executed} time units remaining: {self.executing_task.remaining_time - executed}')
-                self.executing_task.execute(self.time, self.sleeping_tasks[0].next_start - self.time)
-                self.time += self.sleeping_tasks[0].next_start - self.time
+                self.executing_task.execute(self.time, executed)
+                self.time += executed
+                if self.executing_task.executed:
+                    self.sleeping_tasks.append(self.executing_task)
+                    self.executing_task = None
+                    self.wake_up_task()
+                    return
                 self.wake_up_task()
                 bisect.insort(self.waiting_tasks, self.executing_task, key=self.insort_method)
                 return
@@ -43,6 +73,12 @@ class RMSim:
         return (True if  self.sleeping_tasks[0].priority > self.executing_task.priority else False)
 
     def wake_up_task(self) -> None:
+        task_to_wake_up, idx = self.get_first_task_to_wake_up()
+        if task_to_wake_up is not None:
+            print (f"Task{task_to_wake_up.number} deveria ser acordada em {task_to_wake_up.next_start}")
+            task_to_wake_up.start_task()
+            bisect.insort(self.waiting_tasks, self.sleeping_tasks.pop(idx), key=self.insort_method)
+            return
         self.sleeping_tasks[0].start_task()
         bisect.insort(self.waiting_tasks, self.sleeping_tasks.pop(0), key=self.insort_method)
 

@@ -35,6 +35,14 @@ def plot_grant(values, deadlines, periods):
             facecolors=(f"tab:{colors[idx%len(colors)]}"),
             edgecolors="black",
         )
+        gnt.hlines(
+            (idx + 1) * 10,
+            0,
+            24,
+            colors="black",
+            linestyles="solid",
+            linewidth=1,
+        )
 
     for idx, value in enumerate(deadlines):
         for idx2, deadline in enumerate(value):
@@ -42,13 +50,13 @@ def plot_grant(values, deadlines, periods):
                 deadline,
                 (idx + 1) * 10,
                 (idx + 1) * 10 + 12,
-                colors=colors[idx2 % len(colors)],
+                colors=colors[idx % len(colors)],
                 linestyles="solid",
             )
 
     for idx, deadline in enumerate(periods):
-        i = 0
-        while deadline * i < 50:
+        i = 1
+        while deadline * i < 24:
             print(deadline * i, (idx + 1) * 10, (idx + 1) * 10 + 12)
             gnt.vlines(
                 deadline * i,
@@ -66,9 +74,9 @@ def plot_grant(values, deadlines, periods):
 def plot_deadlines(periods):
     for idx, deadline in enumerate(periods):
         i = 0
-        while deadline * i < 50:
+        while deadline * i < 24:
             print(deadline * i, deadline)
-            plt.axvline(deadline * i, 0, 50, color="white", linestyle="dashed")
+            plt.axvline(deadline * i, 0, 24, color="green", linestyle="dashed")
             i += 1
 
 
@@ -87,7 +95,7 @@ plot_grant(
             [35, 2],
             [40, 2],
             [45, 2],
-            [50, 2],
+            [20, 2],
         ],
     ],
     [],
