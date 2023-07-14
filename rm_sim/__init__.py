@@ -155,6 +155,12 @@ class EDFSim:
                     self.sleeping_tasks, self.executing_task, key=self.sleep_insort_method
                 )
 
+    def check_interruption(self) -> bool:
+        interrupted = False
+        if self.sleeping_tasks[0].next_start < (self.time + self.executing_task.remaining_time):
+            interrupted = True
+        return interrupted
+
     def execute_task(self):
         # Inserção da próxima tarefa como executando
         self.executing_task = self.waiting_tasks.pop(0)
