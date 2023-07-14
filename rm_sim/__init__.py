@@ -35,7 +35,7 @@ class RMSim:
         print(f'{self.executing_task} executed for {self.executing_task.remaining_time} time units')
         executed = self.executing_task.remaining_time
         self.executing_task.execute(self.time, self.executing_task.remaining_time)
-        bisect.insort(self.sleeping_tasks, self.executing_task, key=self.insort_method)
+        bisect.insort(self.sleeping_tasks, self.executing_task, key=lambda x: x.next_start)
         self.time += executed
         self.executing_task = None
 
@@ -98,7 +98,7 @@ class EDFSim:
         print(f'{self.executing_task} executed for {self.executing_task.remaining_time} time units')
         executed = self.executing_task.remaining_time
         self.executing_task.execute(self.time, self.executing_task.remaining_time)
-        bisect.insort(self.sleeping_tasks, self.executing_task, key=self.insort_method)
+        bisect.insort(self.sleeping_tasks, self.executing_task, key=lambda x: x.next_start)
         self.time += executed
         self.executing_task = None
 
